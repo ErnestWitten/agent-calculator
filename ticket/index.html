@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Engineer and Ticket Calculator</title>
+    <style>
+        /* Общая стилизация */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        h1, h2 {
+            color: #4CAF50;
+            text-align: center;
+        }
+
+        /* Стили для секций */
+        section {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin: 20px auto;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+
+        input[type="number"], input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 8px 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: block;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        pre {
+            background: #f4f4f4;
+            border-left: 4px solid #4CAF50;
+            padding: 10px 15px;
+            overflow-x: auto;
+            border-radius: 5px;
+            max-width: 100%;
+            font-size: 14px;
+        }
+
+        hr {
+            border: 0;
+            height: 2px;
+            background: #ddd;
+            margin: 20px 0;
+            border-radius: 2px;
+        }
+
+        /* Стилизация для Footer */
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+            font-size: 12px;
+        }
+    </style>
+    <script>
+        function calculateTickets() {
+            // Ввод количества сессий
+            const sessions = parseInt(document.getElementById("sessions").value);
+            const clientPercent = 0.01;   // 1% тикетов от сессий клиентов
+            const testPercent = 0.03;    // 3% тикетов от тестируемых
+
+            // Расчёт количества тикетов
+            const clientTickets = sessions * clientPercent;
+            const testTickets = sessions * testPercent;
+            const totalTickets = clientTickets + testTickets;
+
+            // Заполнение поля тикетов
+            document.getElementById("tickets").value = totalTickets.toFixed(2);
+
+            // Вывод результатов
+            document.getElementById("ticket_output").innerText = `
+Кол-во тикетов от клиентов (1%): ${clientTickets.toFixed(2)}
+Кол-во тикетов от тестируемых (3%): ${testTickets.toFixed(2)}
+Общее кол-во тикетов: ${totalTickets.toFixed(2)}
+            `;
+        }
+
+        function calculateDynamicEngineers() {
+            // Вводные данные
+            const N = parseFloat(document.getElementById("tickets").value); // Количество тикетов
+            const h = parseFloat(document.getElementById("aht").value);    // Среднее время тикета (часы)
+            const U1 = parseFloat(document.getElementById("u1").value);   // Обеденный коэффициент
+            const U3 = parseFloat(document.getElementById("u3").value);   // Коэффициент Обучения
+            const V = parseFloat(document.getElementById("v").value);     // Коэффициент Отпусков
+            const baseEfficiency = parseFloat(document.getElementById("baseU2").value); // Базовая эффективность
+            const stressFactor = parseFloat(document.getElementById("stressFactor").value); // Фактор стресса
+            const normalLoad = parseFloat(document.getElementById("normalLoad").value); // Нормальная загрузка тикетов
+            const baseSickness = parseFloat(document.getElementById("baseS").value); // Базовый коэффициент болезней
+            const overloadFactor = parseFloat(document.getElementById("overloadFactor").value); // Фактор перегрузки
+            const H_engineer = parseFloat(document.getElementById("engineer_hours").value); // Часы работы инженера
+
+            // Динамический перерасчёт U2 и S
+            const U2_dynamic = baseEfficiency - (stressFactor * (N / normalLoad));   // Динамическая эффективность
+            const S_dynamic = baseSickness * (1 + overloadFactor * (N / normalLoad)); // Динамический коэффициент болезней
+
+            // Расчёты
+            const averageUtilization = (U1 + U2_dynamic + U3) / 3;   // Средняя производительность
+            const H_total = (N * h) / (averageUtilization * V * S_dynamic); // Общие часы
+            const E_total = H_total / H_engineer;                   // Число инженеров
+
+            // Результат
+            document.getElementById("engineer_output").innerText = `
+Динамическая эффективность (U2): ${U2_dynamic.toFixed(2)}
+Динамический коэффициент больничных (S): ${S_dynamic.toFixed(2)}
+Общее время (H_total): ${H_total.toFixed(2)} часов
+Количество инженеров (E_total): ${E_total.toFixed(2)} инженеров
+            `;
+        }
+    </script>
+</head>
+<body>
+    <h1>Dynamic Engineer and Ticket Calculator</h1>
+    <section>
+        <h2>Мини-калькулятор ожидаемого количества тикетов</h2>
+        <label>Количество сессий в месяц: <input type="number" id="sessions" value="100000"></label>
+        <button onclick="calculateTickets()">Рассчитать тикеты</button>
+
+        <pre id="ticket_output"></pre>
+    </section>
+    <hr>
+    <section>
+        <h2>Калькулятор инженеров в месяц</h2>
+        <label>Количество тикетов (N): <input type="number" id="tickets" value="0"></label><br>
+        <label>Среднее время обработки тикета (AHT, h): <input type="number" id="aht" value="0.5" step="0.01"></label><br>
+        <label>Коэффициент обедов и отдыха (U1): <input type="number" id="u1" value="0.75" step="0.01"></label><br>
+        <label>Коэффициент обучения и R&D (U3): <input type="number" id="u3" value="0.99" step="0.01"></label><br>
+        <label>Коэффициент отпусков (V): <input type="number" id="v" value="1.08" step="0.01"></label><br>
+        <label>Базовая эффективность (Base U2): <input type="number" id="baseU2" value="0.8" step="0.01"></label><br>
+        <label>Фактор стресса (Stress Factor): <input type="number" id="stressFactor" value="0.1" step="0.01"></label><br>
+        <label>Нормальная загрузка тикетов (Normal Load): <input type="number" id="normalLoad" value="1000"></label><br>
+        <label>Базовый коэффициент болезней (Base S): <input type="number" id="baseS" value="1.03" step="0.01"></label><br>
+        <label>Фактор перегрузки (Overload Factor): <input type="number" id="overloadFactor" value="0.05" step="0.01"></label><br>
+        <label>Часы работы инженера в месяц (H_engineer): <input type="number" id="engineer_hours" value="168"></label><br>
+        <button onclick="calculateDynamicEngineers()">Рассчитать инженеров</button>
+        <h2>Результат:</h2>
+        <pre id="engineer_output"></pre>
+    </section>
+</body>
+</html>
